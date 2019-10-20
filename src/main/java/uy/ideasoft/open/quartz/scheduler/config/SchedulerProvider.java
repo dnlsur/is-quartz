@@ -1,4 +1,4 @@
-package uy.ideasoft.open.quartz.springbootquartz.config;
+package uy.ideasoft.open.quartz.scheduler.config;
 
 import liquibase.Liquibase;
 import liquibase.database.Database;
@@ -9,6 +9,8 @@ import liquibase.resource.ClassLoaderResourceAccessor;
 import org.postgresql.ds.PGPoolingDataSource;
 import org.quartz.Scheduler;
 import org.quartz.impl.StdSchedulerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -19,16 +21,17 @@ import java.util.Properties;
 
 public class SchedulerProvider {
 
-  public static final String CHANGELOG_MASTER = "db/changelog/master.xml";
+  private static final String CHANGELOG_MASTER = "db/changelog/master.xml";
 
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  public Properties quartzProperties() {
+  private Properties quartzProperties() {
 
     Properties properties = new Properties();
     try {
       properties.load(getClass().getClassLoader().getResourceAsStream("quartz.properties"));
     } catch (IOException e) {
-//      Logger.getLogger(getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
+      logger.error(e.getMessage(), e);
     }
     return properties;
   }
@@ -38,8 +41,7 @@ public class SchedulerProvider {
     StdSchedulerFactory sf = new StdSchedulerFactory();
     Properties props = quartzProperties();
     sf.initialize(props);
-    Scheduler scheduler = sf.getScheduler();
-    return scheduler;
+    return sf.getScheduler();
   }
 
   public DataSource dataSource() {
@@ -53,8 +55,8 @@ public class SchedulerProvider {
     return source;
   }
 
-  public Connection connection(DataSource source) {
-    Connection conn = null;
+  private Connection connection(DataSource source) {
+    Connection conn;
     try {
       conn = source.getConnection();
       return conn;
@@ -67,7 +69,7 @@ public class SchedulerProvider {
   }
 
   public void runLiquibase() {
-    Liquibase liquibase = null;
+    Liquibase liquibase;
     Connection c = null;
     try {
 //    c = DriverManager.getConnection(DataSources.PROPERTIES.getProperty("jdbc.url"),

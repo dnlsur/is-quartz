@@ -6,22 +6,25 @@
   <artifactId>is-quartz</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>is-quartz</name>
-  <description>Ideasoft Spring Example</description>
+  <description>Ideasoft Quartz Cluster Example</description>
 
   <properties>
     <java.version>1.8</java.version>
+    <quartz.version>2.3.1</quartz.version>
+
     <liquibase.version>3.7.0</liquibase.version>
-    <quartz.version>2.3.0</quartz.version>
     <postgresql.version>9.1-901.jdbc4</postgresql.version>
+
+    <slf4j.version>1.7.28</slf4j.version>
+    <log4j.version>1.2.17</log4j.version>
+
+    <scala.version>2.12.8</scala.version>
+    <scala.suffix>_2.12</scala.suffix>
+    <scala-parser-combinators.version>1.0.5</scala-parser-combinators.version>
+    <scalatest.version>3.0.8</scalatest.version>
   </properties>
 
   <dependencies>
-
-    <dependency>
-      <groupId>org.liquibase</groupId>
-      <artifactId>liquibase-core</artifactId>
-      <version>${liquibase.version}</version>
-    </dependency>
 
     <dependency>
       <groupId>org.quartz-scheduler</groupId>
@@ -30,13 +33,75 @@
     </dependency>
 
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>${slf4j.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>${log4j.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.liquibase</groupId>
+      <artifactId>liquibase-core</artifactId>
+      <version>${liquibase.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <version>${postgresql.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-reflect</artifactId>
+      <version>${scala.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest${scala.suffix}</artifactId>
+      <version>${scalatest.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-compiler</artifactId>
+      <version>${scala.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scala-lang.modules</groupId>
+      <artifactId>scala-parser-combinators${scala.suffix}</artifactId>
+      <!--FIXME: sbt no se queja pero maven sí diciendo que las otras dependencias requieren 2.11.7 menos esta.-->
+      <version>${scala-parser-combinators.version}</version>
+    </dependency>
+
   </dependencies>
 
+
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>net.alchim31.maven</groupId>
+          <artifactId>scala-maven-plugin</artifactId>
+          <version>4.2.0</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
     <plugins>
       <plugin>
         <groupId>org.liquibase</groupId>
@@ -56,6 +121,85 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>scala</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+        <file>
+          <exists>src/main/scala</exists>
+        </file>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-library</artifactId>
+          <version>${scala.version}</version>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+
+          <plugin>
+            <groupId>net.alchim31.maven</groupId>
+            <artifactId>scala-maven-plugin</artifactId>
+            <configuration>
+              <args>
+                <arg>-feature</arg>
+              </args>
+            </configuration>
+            <executions>
+              <execution>
+                <id>scala-compile-first</id>
+                <phase>process-resources</phase>
+                <goals>
+                  <goal>add-source</goal>
+                  <goal>compile</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>scala-test-compile</id>
+                <phase>process-test-resources</phase>
+                <goals>
+                  <goal>testCompile</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <!-- disable surefire -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.7</version>
+            <configuration>
+              <skipTests>true</skipTests>
+            </configuration>
+          </plugin>
+          <!-- enable scalatest -->
+          <plugin>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest-maven-plugin</artifactId>
+            <version>1.0</version>
+            <configuration>
+              <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+              <junitxml>.</junitxml>
+              <filereports>WDF TestSuite.txt</filereports>
+            </configuration>
+            <executions>
+              <execution>
+                <id>test</id>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
 
 </project>
 

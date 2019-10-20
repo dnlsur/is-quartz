@@ -1,4 +1,4 @@
-package uy.ideasoft.open.quartz.springbootquartz;
+package uy.ideasoft.open.quartz.scheduler.example;
 
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
@@ -13,6 +13,7 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.utils.Key;
+import uy.ideasoft.open.quartz.scheduler.example.jobs.TaskJob;
 
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -22,7 +23,8 @@ import java.util.stream.Collectors;
 
 
 public class JobsService {
-  private final String groupName = "normal-group";
+
+  private final String groupName = "myGroup";
 
   private final Scheduler scheduler;
 
@@ -40,13 +42,13 @@ public class JobsService {
   }
 
   public String addNewJob() throws SchedulerException {
-    String id = UUID.randomUUID().toString();
+    UUID uuid = UUID.randomUUID();
+    String prefix = (uuid.getLeastSignificantBits() % 2 == 0) ? "ex-" : "ok-";
+    String id = prefix + uuid.toString();
 
     JobDetail job =
-        newJob(TestJob1.class)
+        newJob(TaskJob.class)
             .withIdentity(id, groupName)
-            // http://www.quartz-scheduler.org/documentation/quartz-2.2.x/configuration/ConfigJDBCJobStoreClustering.html
-            // https://stackoverflow.com/a/19270566/285571
             .requestRecovery(true)
             .build();
 
@@ -55,7 +57,7 @@ public class JobsService {
             .withIdentity(id + "-trigger", groupName)
             .startNow()
             .withSchedule(
-                simpleSchedule().withIntervalInSeconds(30)
+                simpleSchedule().withIntervalInSeconds(3)
             )
             .build();
 
