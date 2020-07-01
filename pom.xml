@@ -10,7 +10,7 @@
 
   <properties>
     <java.version>1.8</java.version>
-    <quartz.version>2.3.1</quartz.version>
+    <quartz.version>2.3.2</quartz.version>
 
     <liquibase.version>3.7.0</liquibase.version>
     <postgresql.version>9.1-901.jdbc4</postgresql.version>
